@@ -1,69 +1,73 @@
-import React, { Component } from 'react';
+import { useState } from 'react';
 import PropTypes from 'prop-types';
 import { MdPersonAddAlt1 } from 'react-icons/md';
+
 import { Form, Label } from './ContactForm.styled';
 import { Btn } from '../Btn/Btn';
 import { InputItem } from './InputItem';
 
-export class ContactForm extends Component {
-  state = {
-    name: '',
-    number: '',
+export const ContactForm = ({ onAddBtnClick }) => {
+  const [name, setName] = useState('');
+  const [number, setNumber] = useState('');
+
+  const onInputChange = event => {
+    switch (event.target.name) {
+      case 'name':
+        setName(event.target.value);
+        break;
+      case 'number':
+        setNumber(event.target.value);
+        break;
+      default:
+        return;
+    }
   };
 
-  onInputChange = event => {
-    const { name, value } = event.currentTarget;
-    this.setState({ [name]: value });
-  };
-
-  handleSubmit = event => {
+  const handleSubmit = event => {
     event.preventDefault();
-
-    this.props.onAddBtnClick(this.state);
-
-    this.resetForm();
+    onAddBtnClick({ name, number });
+    resetForm();
   };
 
-  resetForm = () => {
-    this.setState({ name: '', number: '' });
+  const resetForm = () => {
+    setName('');
+    setNumber('');
   };
 
-  render() {
-    return (
-      <Form onSubmit={this.handleSubmit}>
-        <Label>
-          Name
-          <InputItem
-            onChange={this.onInputChange}
-            value={this.state.name}
-            name="name"
-            placeholder="Enter contact`s name"
-            pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
-            title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
-          />
-        </Label>
-        <Label>
-          Number
-          <InputItem
-            onChange={this.onInputChange}
-            value={this.state.number}
-            type="tel"
-            name="number"
-            placeholder="Enter contact`s number"
-            pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
-            title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
-          />
-        </Label>
-        <Btn
-          type="submit"
-          icon={MdPersonAddAlt1}
-          status="add"
-          text="Add contact"
+  return (
+    <Form onSubmit={handleSubmit}>
+      <Label>
+        Name
+        <InputItem
+          onChange={onInputChange}
+          value={name}
+          name="name"
+          placeholder="Enter contact`s name"
+          pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
+          title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
         />
-      </Form>
-    );
-  }
-}
+      </Label>
+      <Label>
+        Number
+        <InputItem
+          onChange={onInputChange}
+          value={number}
+          type="tel"
+          name="number"
+          placeholder="Enter contact`s number"
+          pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
+          title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
+        />
+      </Label>
+      <Btn
+        type="submit"
+        icon={MdPersonAddAlt1}
+        status="add"
+        text="Add contact"
+      />
+    </Form>
+  );
+};
 
 ContactForm.propTypes = {
   onAddBtnClick: PropTypes.func.isRequired,
