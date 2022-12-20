@@ -1,90 +1,34 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
 import { nanoid } from 'nanoid';
 import Notiflix from 'notiflix';
 
 import { Container, MainHeader, SubHeader } from './App.styled';
+import { useLocalStorage } from '../hooks/useLocalStorage';
+import { defaultContacts } from '../utils/defaultContacts';
+import { notifySettings } from '../utils/notifySettings';
 import { ContactForm } from './ContactForm/ContactForm';
 import { Filter } from './Filter/Filter';
 import { ContactList } from './ContactList/ContactList';
 
-const notifySettings = {
-  width: '380px',
-  position: 'right-top',
-  distance: '10px',
-  opacity: 1,
-  fontSize: '20px',
-  borderRadius: '12px',
-};
+export const App = () => {
+  const [contacts, setContacts] = useLocalStorage('contacts', defaultContacts);
+  const [filter, setFilter] = useState('');
 
-export class App extends React.Component {
-  state = {
-    contacts: [
-      { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-      { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-      { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-      { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-    ],
-    filter: '',
-  };
+  useEffect(() => {
+    localStorage.setItem('contacts', JSON.stringify(contacts));
+  }, [contacts]);
 
-  componentDidMount() {
-    const contactsFromStorage = JSON.parse(localStorage.getItem('contacts'));
-
-    if (contactsFromStorage) {
-      this.setState({ contacts: contactsFromStorage });
-
-      if (contactsFromStorage.length === 0) {
-        Notiflix.Notify.info('No contacts in your list yet', notifySettings);
-      }
+  useEffect(() => {
+    const dataFromStorage = JSON.parse(window.localStorage.getItem('contacts'));
+    if (dataFromStorage && dataFromStorage.length === 0) {
+      Notiflix.Notify.info('No contacts in your list yet', notifySettings);
     }
-  }
+  }, []);
 
-  componentDidUpdate(prevProps, prevState) {
-    if (prevState.contacts !== this.state.contacts) {
-      localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
-    }
-  }
+  useEffect(() => {
+    const query = filter.toLocaleLowerCase();
 
-  onAddBtnClick = FormData => {
-    const { name, number } = FormData;
-
-    const includesName = this.state.contacts.find(
-      contact => contact.name.toLocaleLowerCase() === name.toLocaleLowerCase()
-    );
-
-    if (includesName) {
-      return Notiflix.Notify.warning(
-        `${name} is already in contacts`,
-        notifySettings
-      );
-    } else {
-      let contact = { id: nanoid(), name: name, number: number };
-      this.setState(prevState => ({
-        contacts: [...prevState.contacts, contact],
-      }));
-      Notiflix.Notify.success(
-        `${name} was successfully added to your contacts`,
-        notifySettings
-      );
-    }
-  };
-
-  onDeleteBtnClick = (id, name) => {
-    this.setState(prevState => ({
-      contacts: prevState.contacts.filter(contact => contact.id !== id),
-    }));
-    Notiflix.Notify.info(
-      `${name} was successfully deleted from your contacts`,
-      notifySettings
-    );
-  };
-
-  onFilterChange = event => {
-    this.setState({ filter: event.target.value });
-
-    const query = this.state.filter.toLocaleLowerCase();
-
-    const itemByQuery = this.state.contacts.find(contact =>
+    const itemByQuery = contacts.find(contact =>
       contact.name.toLocaleLowerCase().includes(query)
     );
 
@@ -94,30 +38,63 @@ export class App extends React.Component {
         notifySettings
       );
     }
-  };
+  }, [filter, contacts]);
 
-  filterContacts = () => {
-    const query = this.state.filter.toLocaleLowerCase();
+  const onAddBtnClick = FormData => {
+    const { name, number } = FormData;
+    const id = nanoid();
 
-    const filteredContacts = this.state.contacts.filter(contact =>
-      contact.name.toLocaleLowerCase().includes(query)
+    const includesName = contacts.find(
+      contact => contact.name.toLocaleLowerCase() === name.toLocaleLowerCase()
     );
 
+    if (includesName) {
+      return Notiflix.Notify.warning(
+        `${name} is already in contacts`,
+        notifySettings
+      );
+    } else {
+      const contact = { id, name, number };
+      setContacts(prevContacts => [...prevContacts, contact]);
+      Notiflix.Notify.success(
+        `${name} was successfully added to your contacts`,
+        notifySettings
+      );
+    }
+  };
+
+  const onDeleteBtnClick = (id, name) => {
+    setContacts(prevContacts =>
+      prevContacts.filter(contact => contact.id !== id)
+    );
+    Notiflix.Notify.info(
+      `${name} was successfully deleted from your contacts`,
+      notifySettings
+    );
+  };
+
+  const onFilterChange = event => {
+    setFilter(event.target.value);
+  };
+
+  const filterContacts = () => {
+    const query = filter.toLocaleLowerCase();
+    const filteredContacts = contacts.filter(contact =>
+      contact.name.toLocaleLowerCase().includes(query)
+    );
     return filteredContacts;
   };
 
-  render() {
-    return (
-      <Container>
-        <MainHeader>Phonebook</MainHeader>
-        <ContactForm onAddBtnClick={this.onAddBtnClick} />
-        <SubHeader>Contacts</SubHeader>
-        <Filter value={this.state.filter} onChange={this.onFilterChange} />
-        <ContactList
-          contacts={this.filterContacts()}
-          onDeleteBtnClick={this.onDeleteBtnClick}
-        />
-      </Container>
-    );
-  }
-}
+  return (
+    <Container>
+      <MainHeader>Phonebook</MainHeader>
+      <ContactForm onAddBtnClick={onAddBtnClick} />
+      <SubHeader>Contacts</SubHeader>
+      <Filter value={filter} onChange={onFilterChange} />
+      <ContactList
+        contacts={filterContacts()}
+        onDeleteBtnClick={onDeleteBtnClick}
+      />
+    </Container>
+  );
+};
