@@ -54,20 +54,17 @@ export const App = () => {
   const filterContacts = () => {
     const query = filter.toLocaleLowerCase();
 
-    const itemByQuery = contacts.find(contact =>
+    const filteredContacts = contacts.filter(contact =>
       contact.name.toLocaleLowerCase().includes(query)
     );
 
-    if (query && !itemByQuery) {
+    if (query && !filteredContacts.length) {
       Notiflix.Notify.warning(
         'No contacts matching your request',
         notifySettings
       );
     }
 
-    const filteredContacts = contacts.filter(contact =>
-      contact.name.toLocaleLowerCase().includes(query)
-    );
     return filteredContacts;
   };
 
