@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { nanoid } from 'nanoid';
 import Notiflix from 'notiflix';
 
@@ -13,32 +13,6 @@ import { ContactList } from './ContactList/ContactList';
 export const App = () => {
   const [contacts, setContacts] = useLocalStorage('contacts', defaultContacts);
   const [filter, setFilter] = useState('');
-
-  useEffect(() => {
-    localStorage.setItem('contacts', JSON.stringify(contacts));
-  }, [contacts]);
-
-  useEffect(() => {
-    const dataFromStorage = JSON.parse(window.localStorage.getItem('contacts'));
-    if (dataFromStorage && dataFromStorage.length === 0) {
-      Notiflix.Notify.info('No contacts in your list yet', notifySettings);
-    }
-  }, []);
-
-  useEffect(() => {
-    const query = filter.toLocaleLowerCase();
-
-    const itemByQuery = contacts.find(contact =>
-      contact.name.toLocaleLowerCase().includes(query)
-    );
-
-    if (!itemByQuery) {
-      Notiflix.Notify.warning(
-        'No contacts matching your request',
-        notifySettings
-      );
-    }
-  }, [filter, contacts]);
 
   const onAddBtnClick = FormData => {
     const { name, number } = FormData;
@@ -79,6 +53,18 @@ export const App = () => {
 
   const filterContacts = () => {
     const query = filter.toLocaleLowerCase();
+
+    const itemByQuery = contacts.find(contact =>
+      contact.name.toLocaleLowerCase().includes(query)
+    );
+
+    if (query && !itemByQuery) {
+      Notiflix.Notify.warning(
+        'No contacts matching your request',
+        notifySettings
+      );
+    }
+
     const filteredContacts = contacts.filter(contact =>
       contact.name.toLocaleLowerCase().includes(query)
     );
